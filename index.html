@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Our 8-Month Anniversary Connections</title>
+    <style>
+        /* CSS Variables for Easy Customization & Theming */
+        :root {
+            --bg-color: #fff5f6;
+            --container-bg: #ffffff;
+            --text-color: #4a3b40;
+            --button-border: #e0b0b9;
+            --button-bg: #fffcfd;
+            --button-hover: #ffeef1;
+            --button-selected: #f7cbd5;
+            --btn-action-bg: #8c7379;
+            --btn-action-text: #ffffff;
+
+        /* Connections Category Colors */
+        --yellow: #f9df74;
+        --green: #a0c9a4;
+        --blue: #b0c3e1;
+        --purple: #c2a0db;
+    }
+
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 100vh;
+        padding: 20px;
+    }
+
+    header {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    header h1 {
+        font-size: 2rem;
+        color: #b55d75;
+        margin-bottom: 5px;
+    }
+
+    header p {
+        font-size: 0.95rem;
+        color: #7d656c;
+    }
+
+    .game-container {
+        width: 100%;
+        max-width: 500px;
+        background: var(--container-bg);
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 8px 24px rgba(224, 176, 185, 0.2);
+    }
+
+    /* Container for successfully guessed category bars */
+    #solved-categories {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 8px;
+    }
+
+    .solved-bar {
+        width: 100%;
+        padding: 14px;
+        border-radius: 8px;
+        text-align: center;
+        font-weight: bold;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        animation: popIn 0.4s ease-out forwards;
+    }
+
+    .solved-bar.yellow { background-color: var(--yellow); color: #2a2200; }
+    .solved-bar.green { background-color: var(--green); color: #0d2110; }
+    .solved-bar.blue { background-color: var(--blue); color: #0d1b2d; }
+    .solved-bar.purple { background-color: var(--purple); color: #1f0b2a; }
+
+    .solved-items {
+        font-weight: normal;
+        font-size: 0.8rem;
+        margin-top: 4px;
+        letter-spacing: 0.5px;
+    }
+
+    /* 4x4 Play Grid */
+    #grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        margin-bottom: 20px;
+    }
+
+    .card {
+        background-color: var(--button-bg);
+        border: 1.5px solid var(--button-border);
+        border-radius: 8px;
+        aspect-ratio: 1 / 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        font-weight: bold;
+        font-size: 0.75rem;
+        padding: 4px;
+        cursor: pointer;
+        user-select: none;
+        transition: transform 0.1s ease, background-color 0.2s ease, border-color 0.2s;
+        text-transform: uppercase;
+    }
+
+    @media (max-width: 380px) {
+        .card {
+            font-size: 0.65rem;
+        }
+    }
+
+    .card:hover {
+        background-color: var(--button-hover);
+    }
+
+    .card.selected {
+        background-color: var(--button-selected);
+        border-color: #d38195;
+        transform: scale(0.96);
+    }
+
+    /* Shake animation for wrong guesses */
+    .shake {
+        animation: shake 0.4s ease-in-out;
+    }
+
+    /* Mistakes remaining indicator */
+    .status-area {
+        text-align: center;
+        margin-bottom: 20px;
+        font-size: 0.95rem;
+        font-weight: 500;
+    }
+
+    .hearts {
+        color: #c95d7a;
+        letter-spacing: 2px;
+        margin-left: 5px;
+    }
+
+    /* Action Buttons styling */
+    .controls {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .btn {
+        padding: 12px 18px;
+        border-radius: 25px;
+        border: 1.5px solid var(--btn-action-bg);
+        background-color: transparent;
+        color: var(--btn-action-bg);
+        font-weight: bold;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+    }
+
+    .btn:hover:not(:disabled) {
+        background-color: #f7eded;
+    }
+
+    .btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        border-color: #ccc;
+        color: #999;
+    }
+
+    .btn-submit {
+        background-color: var(--btn-action-bg);
+        color: var(--btn-action-text);
+    }
+
+    .btn-submit:hover:not(:disabled) {
+        background-color: #6d595d;
+    }
+
+    /* Toast notifications styling */
+    #toast {
+        position: fixed;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%) translateY(100px);
+        background-color: #333;
+        color: white;
+        padding: 12px 24px;
+        border-radius: 30px;
+        font-size: 0.9rem;
+        font-weight: bold;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        z-index: 1000;
+        opacity: 0;
+    }
+
+    #toast.show {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+    }
+
+    /* Win Modal */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0,0,0,0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+        z-index: 100;
+    }
+
+    .modal-overlay.active {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .modal {
+        background: white;
+        padding: 30px;
+        border-radius: 16px;
+        text-align: center;
+        max-width: 400px;
+        width: 90%;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        transform: scale(0.8);
+        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .modal-overlay.active .modal {
+        transform: scale(1);
+    }
+
+    .modal h2 {
+        color: #b55d75;
+        margin-bottom: 15px;
+        font-size: 1.8rem;
+    }
+
+    .modal p {
+        font-size: 1.05rem;
+        line-height: 1.5;
+        color: var(--text-color);
+        margin-bottom: 20px;
+    }
+
+    .modal-btn {
+        padding: 10px 24px;
+        border-radius: 20px;
+        border: none;
+        background-color: var(--btn-action-bg);
+        color: white;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .modal-btn:hover {
+        background-color: #6d595d;
+    }
+
+    /* Digital Confetti Styles */
+    #confetti-canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        pointer-events: none;
+        z-index: 99;
+    }
+
+    /* Animations */
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        20%, 60% { transform: translateX(-8px); }
+        40%, 80% { transform: translateX(8px); }
+    }
+
+    @keyframes popIn {
+        0% { transform: scale(0.9); opacity: 0; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+</style>
+
+</head>
+<body>
+
+<header>
+    <h1>Our Connections</h1>
+    <p>Find groups of four related items!</p>
+</header>
+
+<div class="game-container">
+    <div id="solved-categories"></div>
+
+    <div id="grid"></div>
+
+    <div class="status-area">
+        Mistakes remaining: <span id="mistake-hearts" class="hearts">💜💜💜💜</span>
+    </div>
+
+    <div class="controls">
+        <button class="btn" id="btn-shuffle" onclick="shuffleGrid()">Shuffle</button>
+        <button class="btn" id="btn-deselect" onclick="deselectAll()">Deselect All</button>
+        <button class="btn btn-submit" id="btn-submit" onclick="submitGuess()" disabled>Submit</button>
+    </div>
+</div>
+
+<div id="toast">Not quite!</div>
+
+<div class="modal-overlay" id="win-modal">
+    <div class="modal">
+        <h2 id="modal-title">You Did It! 🎉</h2>
+        <p id="modal-text">Happy 8 months zeeshaniiii. I love you so so so so much and I am so lucky to have you in my life. I love everything about you and you make me the happiest soul ever. Thank you for putting up with me and being the best bf everrrrr. I love you so much and each day my love grows. I miss u cutie tootieeeeee!!! ❤️</p>
+        <button class="modal-btn" onclick="closeModal()">Close & View Board</button>
+    </div>
+</div>
+
+<canvas id="confetti-canvas"></canvas>
+
+<script>
+    // --- CUSTOM DATA CONFIGURATION ---
+    // Modify these values freely to personalize the game! Keep phrases to 1-3 short words for grid formatting.
+    const categories = {
+        1: {
+            id: 1,
+            name: "Favorite Memories",
+            color: "yellow",
+            items: ["FIRST DATE","DP DOUGHS NIGHT","SLEEPOVERSSSS","STUDY BUDDY DATES"]
+        },
+        2: {
+            id: 2,
+            name: "Favorite Things About You",
+            color: "green",
+            items: ["CUTIE LAUGH","KIND HEART","YOUR SMILE","HUGIES AND KISSES"]
+        },
+        3: {
+            id: 3,
+            name: "Songs That Remind Me of You",
+            color: "blue",
+            items: ["LOVE ME","SWEET BOY","LOVE ME NOT","LOVING YOU"]
+        },
+        4: {
+            id: 4,
+            name: "Happy Eight Months My Love!",
+            color: "purple",
+            items: ["HAPPY","EIGHT","MONTHS","MY LOVE"]
+        }
+    };
+
+    // --- GAME SYSTEM STATE ---
+    let cards = [];
+    let selectedCards = [];
+    let solvedCategories = [];
+    let mistakesRemaining = 4;
+    let isGameOver = false;
+
+    // --- GAME INITIALIZATION ---
+    function initGame() {
+        cards = [];
+        selectedCards = [];
+        solvedCategories = [];
+        mistakesRemaining = 4;
+        isGameOver = false;
+
+        document.getElementById('solved-categories').innerHTML = '';
+        document.getElementById('btn-submit').disabled = true;
+        updateMistakesUI();
+
+        // Populate starting cards from categories
+        for (let catId in categories) {
+            categories[catId].items.forEach(text => {
+                cards.push({
+                    text: text,
+                    categoryId: parseInt(catId)
+                });
+            });
+        }
+
+        shuffle(cards);
+        renderGrid();
+    }
+
+    // --- RENDERING HANDLERS ---
+    function renderGrid() {
+        const gridContainer = document.getElementById('grid');
+        gridContainer.innerHTML = '';
+
+        // Render remaining active cards
+        cards.forEach((card, index) => {
+            const cardDiv = document.createElement('div');
+            cardDiv.classList.add('card');
+            cardDiv.innerText = card.text;
+            cardDiv.dataset.index = index;
+            
+            if (selectedCards.includes(index)) {
+                cardDiv.classList.add('selected');
+            }
+
+            cardDiv.addEventListener('click', () => handleCardClick(index));
+            gridContainer.appendChild(cardDiv);
+        });
+    }
+
+    function handleCardClick(index) {
+        if (isGameOver) return;
+
+        const selectedIndex = selectedCards.indexOf(index);
+        
+        if (selectedIndex > -1) {
+            // Card is already selected -> Deselect it
+            selectedCards.splice(selectedIndex, 1);
+        } else {
+            // Select card if under limit of 4
+            if (selectedCards.length < 4) {
+                selectedCards.push(index);
+            }
+        }
+
+        updateSubmitButton();
+        renderGrid();
+    }
+
+    function updateSubmitButton() {
+        const submitBtn = document.getElementById('btn-submit');
+        submitBtn.disabled = selectedCards.length !== 4;
+    }
+
+    // --- ACTION CONTROLS ---
+    function deselectAll() {
+        selectedCards = [];
+        updateSubmitButton();
+        renderGrid();
+    }
+
+    function shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    function shuffleGrid() {
+        if (isGameOver) return;
+        // Shuffles currently remaining cards and clears current selections
+        shuffle(cards);
+        selectedCards = [];
+        updateSubmitButton();
+        renderGrid();
+    }
+
+    // --- VALIDATION AND GAME LOGIC ---
+    function submitGuess() {
+        if (selectedCards.length !== 4 || isGameOver) return;
+
+        const selectedObjects = selectedCards.map(index => cards[index]);
+        const firstCategory = selectedObjects[0].categoryId;
+        const isMatch = selectedObjects.every(card => card.categoryId === firstCategory);
+
+        if (isMatch) {
+            handleCorrectGuess(firstCategory);
+        } else {
+            handleIncorrectGuess();
+        }
+    }
+
+    function handleCorrectGuess(categoryId) {
+        // Add category bar above
+        const category = categories[categoryId];
+        solvedCategories.push(categoryId);
+
+        const solvedContainer = document.getElementById('solved-categories');
+        const solvedBar = document.createElement('div');
+        solvedBar.className = `solved-bar ${category.color}`;
+        solvedBar.innerHTML = `
+            <div>${category.name}</div>
+            <div class="solved-items">${category.items.join(', ')}</div>
+        `;
+        solvedContainer.appendChild(solvedBar);
+
+        // Filter out correctly guessed cards
+        cards = cards.filter(card => card.categoryId !== categoryId);
+        selectedCards = [];
+        updateSubmitButton();
+        renderGrid();
+
+        // Check Win Condition
+        if (solvedCategories.length === 4) {
+            isGameOver = true;
+            setTimeout(() => {
+                triggerWinState();
+            }, 500);
+        }
+    }
+
+    function handleIncorrectGuess() {
+        // Add shake animation to currently selected cards
+        const cardElements = document.querySelectorAll('.card');
+        selectedCards.forEach(idx => {
+            const element = Array.from(cardElements).find(el => parseInt(el.dataset.index) === idx);
+            if (element) element.classList.add('shake');
+        });
+
+        mistakesRemaining--;
+        updateMistakesUI();
+        showToast("Not quite!");
+
+        // Deselect with a brief delayed reset to allow shake to finish
+        setTimeout(() => {
+            selectedCards = [];
+            updateSubmitButton();
+            renderGrid();
+        }, 600);
+
+        // Check Fail State
+        if (mistakesRemaining === 0) {
+            isGameOver = true;
+            setTimeout(() => {
+                revealAllCategories();
+            }, 1000);
+        }
+    }
+
+    function updateMistakesUI() {
+        const heartsContainer = document.getElementById('mistake-hearts');
+        let hearts = "";
+        for (let i = 0; i < 4; i++) {
+            hearts += i < mistakesRemaining ? "💜" : "🖤";
+        }
+        heartsContainer.innerText = hearts;
+    }
+
+    // Force-reveal remaining answers when mistakes run out
+    function revealAllCategories() {
+        showToast("Game Over! Revealing answers...");
+        
+        const remainingCatIds = [1, 2, 3, 4].filter(id => !solvedCategories.includes(id));
+        
+        remainingCatIds.forEach((id, idx) => {
+            setTimeout(() => {
+                handleCorrectGuess(id);
+            }, idx * 1000);
+        });
+    }
+
+    // --- NOTIFICATION HANDLER ---
+    function showToast(message) {
+        const toast = document.getElementById('toast');
+        toast.innerText = message;
+        toast.classList.add('show');
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 2000);
+    }
+
+    // --- WIN CELEBRATION MODAL ---
+    function triggerWinState() {
+        document.getElementById('win-modal').classList.add('active');
+        startConfetti();
+    }
+
+    function closeModal() {
+        document.getElementById('win-modal').classList.remove('active');
+        stopConfetti();
+    }
+
+    // --- DIGITIAL CONFETTI COMPONENT ---
+    const canvas = document.getElementById('confetti-canvas');
+    const ctx = canvas.getContext('2d');
+    let animationFrameId;
+    let confetti = [];
+
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    class ConfettiParticle {
+        constructor() {
+            this.x = Math.random() * canvas.width;
+            this.y = Math.random() * -canvas.height;
+            this.size = Math.random() * 8 + 4;
+            this.color = ['#f4a8ba', '#f9df74', '#a0c9a4', '#b0c3e1', '#c2a0db'][Math.floor(Math.random() * 5)];
+            this.speedX = Math.random() * 3 - 1.5;
+            this.speedY = Math.random() * 3 + 2;
+            this.rotation = Math.random() * 360;
+            this.rotationSpeed = Math.random() * 4 - 2;
+        }
+
+        update() {
+            this.x += this.speedX;
+            this.y += this.speedY;
+            this.rotation += this.rotationSpeed;
+            if (this.y > canvas.height) {
+                this.y = -20;
+                this.x = Math.random() * canvas.width;
+            }
+        }
+
+        draw() {
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.rotate((this.rotation * Math.PI) / 180);
+            ctx.fillStyle = this.color;
+            ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size);
+            ctx.restore();
+        }
+    }
+
+    function startConfetti() {
+        resizeCanvas();
+        confetti = [];
+        for (let i = 0; i < 150; i++) {
+            confetti.push(new ConfettiParticle());
+        }
+        animateConfetti();
+    }
+
+    function animateConfetti() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        confetti.forEach(particle => {
+            particle.update();
+            particle.draw();
+        });
+        animationFrameId = requestAnimationFrame(animateConfetti);
+    }
+
+    function stopConfetti() {
+        cancelAnimationFrame(animationFrameId);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    // Run game on page load
+    initGame();
+</script>
+
+</body>
+</html>
